@@ -1,0 +1,5 @@
+{
+  "test/acc": 0.80,
+  "test/macro_f1": 0.70,
+  "test/kappa": 0.65
+}

@@ -1,0 +1,5 @@
+name: sleep_edf         # 5-class AASM staging (W/N1/N2/N3/REM); highly imbalanced
+n_subjects: 20          # Sleep-EDF Expanded has up to ~78; start small
+channels: ["EEG Fpz-Cz", "EEG Pz-Oz"]
+recording: [1]
+crop_wake_mins: 30.0    # trim long lights-on wake before/after the sleep period

@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing / typing / linting caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# MNE / data — NEVER commit raw EEG. Track it with DVC instead.
+data/raw/
+data/processed/
+*.fif
+*.edf
+*.bdf
+*.set
+*.gdf
+out_data/
+
+# DVC keeps lightweight .dvc pointers in git; ignore the cache itself
+/.dvc/cache
+/.dvc/tmp
+
+# Experiment artefacts
+mlruns/
+wandb/
+models_store/*.ckpt
+models_store/*.pt
+lightning_logs/
+outputs/        # hydra run dirs
+multirun/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

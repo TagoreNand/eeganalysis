@@ -1,0 +1,31 @@
+# KServe InferenceService — two options.
+#
+# Option A (this manifest): serve our hardened FastAPI container as a custom predictor.
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: eegpipe
+  annotations:
+    serving.kserve.io/enable-prometheus-scraping: "true"
+spec:
+  predictor:
+    minReplicas: 1
+    maxReplicas: 5                      # KServe/Knative autoscales on concurrency
+    scaleTarget: 10
+    containers:
+      - name: kserve-container
+        image: ghcr.io/your-org/eegpipe:latest
+        ports:
+          - containerPort: 8000
+        env:
+          - name: EEGPIPE_ONNX
+            value: /mnt/models/model.onnx
+        resources:
+          requests: { cpu: "1", memory: 1Gi }
+          limits:   { cpu: "2", memory: 2Gi }
+    # Mount the ONNX artefact from object storage (versioned via DVC/MLflow):
+    # storageUri: "s3://my-eeg-bucket/models/eegpipe/v1"
+#
+# Option B (no custom code): use KServe's built-in Triton runtime and point storageUri at the
+# Triton model_repository above:
+#   spec.predictor.triton: { storageUri: "s3://my-eeg-bucket/triton", runtimeVersion: "23.10-py3" }

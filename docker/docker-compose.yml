@@ -1,0 +1,30 @@
+# Local stack: inference API + MLflow tracking server + Streamlit dashboard.
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports: ["8000:8000"]
+    environment:
+      EEGPIPE_CKPT: /models/best.ckpt
+    volumes:
+      - ../models_store:/models:ro
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.12.1
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri /mlflow
+    ports: ["5000:5000"]
+    volumes:
+      - mlflow-data:/mlflow
+
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: streamlit run src/eegpipe/dashboard/app.py --server.port 8501 --server.address 0.0.0.0
+    ports: ["8501:8501"]
+    volumes:
+      - ../models_store:/models:ro
+
+volumes:
+  mlflow-data:

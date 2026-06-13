@@ -1,0 +1,14 @@
+# TinySleepNet-style: per-epoch CNN -> BiLSTM -> per-epoch head.
+name: sleep_seqnet
+emb_dim: 128
+lstm_hidden: 128
+lstm_layers: 1
+dropout: 0.5
+sfreq: 100
+bidirectional: true
+lr: 1.0e-3
+weight_decay: 1.0e-3
+max_epochs: 100
+use_focal: false
+focal_gamma: 2.0
+pretrained_encoder: null   # path to an eegpipe-pretrain SSL checkpoint to warm-start the encoder

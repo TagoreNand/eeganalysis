@@ -1,0 +1,6 @@
+# Stateless steps run in every fold; stateful steps (ica/autoreject) belong inside CV.
+steps:
+  - {name: bandpass, l_freq: 8.0, h_freq: 32.0, notch: 50.0}
+  - {name: resample, sfreq: 128.0}
+  # - {name: ica, threshold: 0.8}        # enable for heavy ocular/muscle artefacts
+  # - {name: autoreject}                 # data-driven epoch rejection

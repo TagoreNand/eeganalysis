@@ -1,0 +1,6 @@
+{
+  "test/accuracy": 0.99,
+  "test/balanced_accuracy": 0.9898900781533412,
+  "test/macro_f1": 0.9896350843635279,
+  "test/kappa": 0.9874660211667567
+}

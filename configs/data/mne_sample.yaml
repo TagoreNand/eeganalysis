@@ -1,0 +1,5 @@
+name: mne_sample
+l_freq: 0.1
+h_freq: 40.0
+tmin: -0.2
+tmax: 0.5

@@ -1,0 +1,5 @@
+name: stgcn
+hidden: 64
+lr: 1.0e-3
+weight_decay: 1.0e-4
+max_epochs: 200

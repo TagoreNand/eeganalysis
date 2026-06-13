@@ -1,0 +1,20 @@
+# Triton Inference Server config for the exported ONNX model.
+# Place the artefact at: model_repository/eegpipe/1/model.onnx
+#   eegpipe-export model.ckpt deploy/triton/model_repository/eegpipe/1/model.onnx \
+#       --kind trial --channels 22 --times 256
+# Adjust `dims` to your model's (channels, times); -1 keeps an axis dynamic.
+name: "eegpipe"
+platform: "onnxruntime_onnx"
+max_batch_size: 64                      # Triton prepends the batch dim; dims below exclude it
+input [
+  { name: "input"  data_type: TYPE_FP32  dims: [ -1, -1 ] }   # (channels, times)
+]
+output [
+  { name: "output" data_type: TYPE_FP32  dims: [ -1 ] }       # (n_classes,)
+]
+# Server-side micro-batching: trade a little latency for much higher throughput.
+dynamic_batching {
+  preferred_batch_size: [ 8, 16, 32 ]
+  max_queue_delay_microseconds: 5000
+}
+instance_group [ { count: 1  kind: KIND_CPU } ]   # set KIND_GPU + gpus for CUDA

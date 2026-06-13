@@ -1,0 +1,14 @@
+# Self-attention over the epoch sequence (SleepTransformer). Stronger long-range context.
+name: sleep_transformer
+emb_dim: 128
+depth: 4
+n_heads: 8
+mlp_ratio: 4
+dropout: 0.3
+sfreq: 100
+lr: 5.0e-4
+weight_decay: 1.0e-3
+max_epochs: 150
+use_focal: false
+focal_gamma: 2.0
+pretrained_encoder: null

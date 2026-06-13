@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eegpipe
+  labels: { app: eegpipe }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: eegpipe }
+  template:
+    metadata:
+      labels: { app: eegpipe }
+    spec:
+      containers:
+        - name: eegpipe
+          image: ghcr.io/your-org/eegpipe:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: EEGPIPE_ONNX
+              value: /models/model.onnx
+            - name: EEGPIPE_API_KEY
+              valueFrom: { secretKeyRef: { name: eegpipe-secrets, key: api-key } }
+          resources:
+            requests: { cpu: "500m", memory: 512Mi }
+            limits:   { cpu: "2",    memory: 2Gi }
+          readinessProbe:                       # only receive traffic once the model loads
+            httpGet: { path: /ready, port: 8000 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:                        # restart if the process wedges
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          volumeMounts:
+            - { name: model, mountPath: /models, readOnly: true }
+      volumes:
+        - name: model                           # populate via initContainer (dvc pull / aws s3 cp)
+          emptyDir: {}

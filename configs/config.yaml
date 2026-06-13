@@ -1,0 +1,18 @@
+# Root Hydra config. Compose groups from the command line, e.g.:
+#   eegpipe-train data=bci_iv_2a model=conformer training.logger=mlflow
+defaults:
+  - data: bci_iv_2a
+  - preprocess: default
+  - model: eegnet
+  - training: default
+  - _self_
+
+seed: 42
+experiment_name: eegpipe
+mlflow_uri: file:./mlruns
+loso: false   # set true for leave-one-subject-out evaluation
+align: false  # set true for Euclidean Alignment domain adaptation (cross-site)
+
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}

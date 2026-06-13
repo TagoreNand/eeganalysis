@@ -1,0 +1,11 @@
+seq_len: 20             # epochs per sequence (~10 min of context)
+stride: null            # null => non-overlapping windows for training
+n_splits: 5
+fold: 0
+batch_size: 32          # sequences per batch
+num_workers: 4
+max_epochs: 100
+patience: 20
+weighted_sampler: true  # oversample sequences containing rare stages (N1)
+logger: csv             # csv | mlflow | wandb
+fast_dev_run: false

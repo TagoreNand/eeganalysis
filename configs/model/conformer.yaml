@@ -1,0 +1,9 @@
+name: conformer
+emb_dim: 40
+depth: 4
+n_heads: 5
+mlp_ratio: 4
+dropout: 0.3
+lr: 5.0e-4
+weight_decay: 1.0e-4
+max_epochs: 300

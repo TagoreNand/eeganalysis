@@ -1,0 +1,8 @@
+n_splits: 5
+fold: 0
+batch_size: 64
+num_workers: 4
+max_epochs: 200
+patience: 30
+logger: csv            # csv | mlflow | wandb
+fast_dev_run: false

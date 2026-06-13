@@ -1,0 +1,11 @@
+# Self-supervised (Relative Positioning) pretraining of the epoch encoder.
+tau_pos: 2              # epochs <= 2 apart are 'close' (positive)
+tau_neg: 15             # epochs >= 15 apart are 'far' (negative)
+n_samples: 20000        # pretext pairs per epoch of training
+batch_size: 128
+num_workers: 4
+max_epochs: 20
+lr: 1.0e-3
+logger: csv
+fast_dev_run: false
+out: models_store/ssl_encoder.pt

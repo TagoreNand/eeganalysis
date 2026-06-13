@@ -1,0 +1,5 @@
+name: bci_iv_2a
+dataset: BNCI2014_001   # BCI Competition IV-2a, 9 subjects, 4 classes
+paradigm: MotorImagery
+fmin: 8.0
+fmax: 32.0

@@ -1,0 +1,13 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: eegpipe
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: eegpipe }
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }
+  # For latency/throughput SLOs, scale on a custom metric (e.g. requests/sec) via
+  # Prometheus Adapter instead of raw CPU.

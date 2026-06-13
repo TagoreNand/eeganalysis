@@ -1,0 +1,16 @@
+.git
+.github
+notebooks
+data
+mlruns
+wandb
+lightning_logs
+outputs
+multirun
+**/__pycache__
+*.ckpt
+*.pt
+.venv
+.pytest_cache
+.mypy_cache
+.ruff_cache

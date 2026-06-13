@@ -1,0 +1,28 @@
+# Reproducible DAG: raw -> preprocessed -> features/train -> evaluate.
+# Raw EEG is tracked by DVC (see README), never committed to git.
+stages:
+  preprocess:
+    cmd: python -m eegpipe.training.evaluate data=bci_iv_2a training.n_splits=${train.n_splits}
+    deps:
+      - src/eegpipe/preprocessing
+      - data/raw
+    params:
+      - preprocess
+      - data
+    outs:
+      - data/processed
+
+  train:
+    cmd: eegpipe-train data=bci_iv_2a model=${model.name} training.max_epochs=${train.max_epochs}
+    deps:
+      - data/processed
+      - src/eegpipe/models
+      - src/eegpipe/training
+    params:
+      - model
+      - train
+    outs:
+      - models_store/best.ckpt
+    metrics:
+      - reports/metrics.json:
+          cache: false

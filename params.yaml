@@ -1,0 +1,15 @@
+# DVC-tracked parameters. `dvc repro` re-runs only the stages whose deps/params changed.
+data:
+  name: bci_iv_2a
+  fmin: 8.0
+  fmax: 32.0
+preprocess:
+  l_freq: 8.0
+  h_freq: 32.0
+  sfreq: 128.0
+model:
+  name: eegnet
+  lr: 0.001
+train:
+  n_splits: 5
+  max_epochs: 200

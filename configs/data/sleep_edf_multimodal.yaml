@@ -1,0 +1,7 @@
+# Multimodal Sleep-EDF: EOG sharpens REM/Wake, submental EMG marks REM atonia.
+# (MNE upsamples the lower-rate EMG channel on read; preprocess=sleep then resamples to 100 Hz.)
+name: sleep_edf
+n_subjects: 20
+channels: ["EEG Fpz-Cz", "EEG Pz-Oz", "EOG horizontal", "EMG submental"]
+recording: [1]
+crop_wake_mins: 30.0

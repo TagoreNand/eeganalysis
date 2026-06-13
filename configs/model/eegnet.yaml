@@ -1,0 +1,8 @@
+name: eegnet
+F1: 8
+D: 2
+kernel_length: 64      # ~ sfreq/2; use 32 at 128 Hz
+dropout: 0.5
+lr: 1.0e-3
+weight_decay: 1.0e-4
+max_epochs: 200
