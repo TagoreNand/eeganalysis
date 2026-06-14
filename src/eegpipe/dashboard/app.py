@@ -160,7 +160,7 @@ with tab_explain:
             from eegpipe.interpret import integrated_gradients, plot_saliency
             from eegpipe.models.base import LitEEGClassifier
 
-            model = LitEEGClassifier.load_from_checkpoint(sc, map_location="cpu").eval()
+            model = LitEEGClassifier.load(sc, map_location="cpu")
             X = raw.get_data()[:, :512].astype("float32")
             attr = integrated_gradients(model, X)
             st.pyplot(plot_saliency(attr, ch_names=raw.ch_names).figure)

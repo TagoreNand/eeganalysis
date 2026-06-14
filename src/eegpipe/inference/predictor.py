@@ -26,8 +26,8 @@ class Predictor:
         from eegpipe.models.base import LitEEGClassifier
 
         self.device = device
-        self.model = LitEEGClassifier.load_from_checkpoint(ckpt_path, map_location=device)
-        self.model.eval().to(device)
+        self.model = LitEEGClassifier.load(ckpt_path, map_location=device)
+        self.model.to(device)
         self.preprocessing = preprocessing  # applied to MNE objects, optional
         self.class_names = class_names
         self._torch = torch

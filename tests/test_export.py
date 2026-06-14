@@ -8,6 +8,7 @@ def test_onnx_export_and_runtime_inference(tmp_path):
     pytest.importorskip("torch")
     pytest.importorskip("onnx")
     pytest.importorskip("onnxruntime")
+    pytest.importorskip("onnxscript")
     from eegpipe.inference import OnnxPredictor
     from eegpipe.models import build_model
     from eegpipe.serving.export import export_module_onnx

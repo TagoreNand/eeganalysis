@@ -23,6 +23,7 @@ class LitEEGClassifier(L.LightningModule):
         weight_decay: float = 1e-4,
         class_weights: list[float] | None = None,
         max_epochs: int = 200,
+        model_spec: dict | None = None,
     ):
         super().__init__()
         # ignore=['backbone'] keeps the checkpoint hyper-params readable & picklable
@@ -31,6 +32,30 @@ class LitEEGClassifier(L.LightningModule):
         w = torch.tensor(class_weights, dtype=torch.float32) if class_weights else None
         self.register_buffer("_class_weights", w if w is not None else torch.empty(0))
         self.n_classes = n_classes
+
+    @classmethod
+    def load(cls, ckpt_path, map_location="cpu"):
+        """Rebuild from a checkpoint produced by build_model / build_sequence_model.
+
+        The backbone is excluded from hyper-parameters, so it is reconstructed from the saved
+        ``model_spec`` before the state dict is loaded.
+        """
+        import torch
+
+        ckpt = torch.load(ckpt_path, map_location=map_location, weights_only=False)
+        hp = dict(ckpt["hyper_parameters"])
+        spec = hp.get("model_spec")
+        if spec is None:
+            raise ValueError(
+                "Checkpoint lacks 'model_spec'; build via eegpipe.models.build_model / "
+                "build_sequence_model so it can be reloaded."
+            )
+        from eegpipe.models.registry import rebuild_backbone
+
+        backbone = rebuild_backbone(spec)
+        model = cls(backbone=backbone, **hp)
+        model.load_state_dict(ckpt["state_dict"])
+        return model.eval()
 
     def forward(self, x):  # x: (B, C, T)
         return self.backbone(x)
@@ -101,6 +126,7 @@ class LitSequenceClassifier(L.LightningModule):
         use_focal: bool = False,
         focal_gamma: float = 2.0,
         class_names: list[str] | None = None,
+        model_spec: dict | None = None,
     ):
         super().__init__()
         self.save_hyperparameters(ignore=["backbone"])
@@ -110,6 +136,30 @@ class LitSequenceClassifier(L.LightningModule):
         w = torch.tensor(class_weights, dtype=torch.float32) if class_weights else None
         self.register_buffer("_cw", w if w is not None else torch.empty(0))
         self._buf: dict[str, list] = {"val": [], "test": []}
+
+    @classmethod
+    def load(cls, ckpt_path, map_location="cpu"):
+        """Rebuild from a checkpoint produced by build_model / build_sequence_model.
+
+        The backbone is excluded from hyper-parameters, so it is reconstructed from the saved
+        ``model_spec`` before the state dict is loaded.
+        """
+        import torch
+
+        ckpt = torch.load(ckpt_path, map_location=map_location, weights_only=False)
+        hp = dict(ckpt["hyper_parameters"])
+        spec = hp.get("model_spec")
+        if spec is None:
+            raise ValueError(
+                "Checkpoint lacks 'model_spec'; build via eegpipe.models.build_model / "
+                "build_sequence_model so it can be reloaded."
+            )
+        from eegpipe.models.registry import rebuild_backbone
+
+        backbone = rebuild_backbone(spec)
+        model = cls(backbone=backbone, **hp)
+        model.load_state_dict(ckpt["state_dict"])
+        return model.eval()
 
     def forward(self, x):
         return self.backbone(x)

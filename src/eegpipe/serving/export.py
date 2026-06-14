@@ -23,7 +23,7 @@ def _load(ckpt: str, kind: str, device: str):
     from eegpipe.models.base import LitEEGClassifier, LitSequenceClassifier
 
     cls = LitSequenceClassifier if kind == "sequence" else LitEEGClassifier
-    return cls.load_from_checkpoint(ckpt, map_location=device).eval().to(device)
+    return cls.load(ckpt, map_location=device).to(device)
 
 
 def _dummy(kind, n_channels, n_times, seq_len, device):
@@ -46,15 +46,16 @@ def export_module_onnx(
         dyn = {"input": {0: "batch", 1: "seq"}, "output": {0: "batch", 1: "seq"}}
     else:
         dyn = {"input": {0: "batch"}, "output": {0: "batch"}}
-    torch.onnx.export(
-        model,
-        dummy,
-        out,
+    kw = dict(
         input_names=["input"],
         output_names=["output"],
         dynamic_axes=dyn,
         opset_version=opset,
     )
+    try:  # force the stable legacy exporter where supported (torch >= 2.5)
+        torch.onnx.export(model, dummy, out, dynamo=False, **kw)
+    except TypeError:
+        torch.onnx.export(model, dummy, out, **kw)
     log.info("Exported ONNX -> %s (kind=%s, opset=%d)", out, kind, opset)
     return out
 

@@ -178,7 +178,7 @@ def main(argv=None) -> int:
         _record("deep", "SKIP", "torch/lightning not installed (runs in CI / on your machine)")
 
     # 7) EXPORT + ONNX parity -------------------------------------------------
-    if ckpt and _have("onnx") and _have("onnxruntime"):
+    if ckpt and _have("onnx") and _have("onnxruntime") and _have("onnxscript"):
         try:
             from eegpipe.inference import OnnxPredictor
             from eegpipe.models import build_sequence_model

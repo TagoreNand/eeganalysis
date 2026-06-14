@@ -26,8 +26,8 @@ class HypnogramPredictor:
         from eegpipe.models.base import LitSequenceClassifier
 
         self._torch = torch
-        self.model = LitSequenceClassifier.load_from_checkpoint(ckpt_path, map_location=device)
-        self.model.eval().to(device)
+        self.model = LitSequenceClassifier.load(ckpt_path, map_location=device)
+        self.model.to(device)
         self.seq_len, self.device, self.batch = seq_len, device, batch
         self.stage_names = (
             stage_names or getattr(self.model, "class_names", None) or self.STAGE_NAMES
