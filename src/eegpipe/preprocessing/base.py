@@ -6,6 +6,7 @@ intact through the whole chain, while still letting us compose steps like an skl
 ``Pipeline``. Stateful steps (ICA, AutoReject) learn parameters in ``fit`` on training
 data only — never on the test fold.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -17,7 +18,7 @@ class BaseTransform(ABC):
     #: set False for steps that must not see test data (ICA, AutoReject, scalers)
     stateless: bool = True
 
-    def fit(self, inst, y=None) -> "BaseTransform":  # noqa: D401
+    def fit(self, inst, y=None) -> BaseTransform:  # noqa: D401
         return self
 
     @abstractmethod

@@ -1,4 +1,5 @@
 """Rich-backed logger factory so every module logs consistently."""
+
 from __future__ import annotations
 
 import logging

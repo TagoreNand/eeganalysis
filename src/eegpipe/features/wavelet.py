@@ -1,5 +1,6 @@
 """Wavelet features. DWT band energies capture non-stationary, transient EEG dynamics
 that fixed-window Fourier features miss (e.g. ERP components, sleep spindles)."""
+
 from __future__ import annotations
 
 import numpy as np

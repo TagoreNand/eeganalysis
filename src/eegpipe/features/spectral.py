@@ -1,12 +1,16 @@
 """Spectral band-power features (delta/theta/alpha/beta/gamma) via Welch PSD."""
+
 from __future__ import annotations
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
 BANDS = {
-    "delta": (1, 4), "theta": (4, 8), "alpha": (8, 13),
-    "beta": (13, 30), "gamma": (30, 45),
+    "delta": (1, 4),
+    "theta": (4, 8),
+    "alpha": (8, 13),
+    "beta": (13, 30),
+    "gamma": (30, 45),
 }
 
 

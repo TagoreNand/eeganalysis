@@ -5,6 +5,7 @@ forever scores well on accuracy and is useless. The sleep-staging literature rep
 **macro-F1** and **Cohen's kappa**; this module computes both plus per-class F1 so you can
 see exactly which stage (usually N1) the model struggles with.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -24,14 +25,15 @@ def sleep_metrics(
     y_true, y_pred = np.asarray(y_true), np.asarray(y_pred)
     n = int(max(y_true.max(), y_pred.max())) + 1 if len(y_true) else 0
     names = class_names or [f"class_{i}" for i in range(n)]
-    per_class = f1_score(y_true, y_pred, labels=list(range(len(names))),
-                         average=None, zero_division=0)
+    per_class = f1_score(
+        y_true, y_pred, labels=list(range(len(names))), average=None, zero_division=0
+    )
     return {
         "accuracy": float(accuracy_score(y_true, y_pred)),
         "balanced_accuracy": float(balanced_accuracy_score(y_true, y_pred)),
         "macro_f1": float(f1_score(y_true, y_pred, average="macro", zero_division=0)),
         "kappa": float(cohen_kappa_score(y_true, y_pred)),
-        "per_class_f1": {n: float(f) for n, f in zip(names, per_class)},
+        "per_class_f1": {n: float(f) for n, f in zip(names, per_class, strict=False)},
     }
 
 

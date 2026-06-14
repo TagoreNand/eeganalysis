@@ -1,4 +1,5 @@
 """Saliency + attention interpretability (torch/matplotlib tests skip if absent)."""
+
 import numpy as np
 import pytest
 
@@ -20,11 +21,15 @@ def test_sequence_attention_and_rollout():
     from eegpipe.interpret import attention_rollout, sequence_attention
     from eegpipe.models import build_sequence_model
 
-    lit = build_sequence_model({"name": "sleep_transformer", "depth": 2, "n_heads": 4,
-                                "emb_dim": 32}, n_channels=2, n_times=600, n_classes=5)
+    lit = build_sequence_model(
+        {"name": "sleep_transformer", "depth": 2, "n_heads": 4, "emb_dim": 32},
+        n_channels=2,
+        n_times=600,
+        n_classes=5,
+    )
     maps = sequence_attention(lit.backbone, torch.randn(1, 6, 2, 600))
     assert len(maps) == 2 and maps[0].shape == (1, 6, 6)
-    assert torch.allclose(maps[0].sum(-1), torch.ones(1, 6), atol=1e-4)   # attention rows sum to 1
+    assert torch.allclose(maps[0].sum(-1), torch.ones(1, 6), atol=1e-4)  # attention rows sum to 1
     assert attention_rollout(maps).shape == (1, 6, 6)
 
 

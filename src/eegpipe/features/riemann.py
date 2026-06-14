@@ -6,6 +6,7 @@ mean linearises them so an ordinary linear classifier becomes extremely effectiv
 near state-of-the-art on small motor-imagery datasets — often beating deep nets when
 trials are scarce. Backed by ``pyriemann``.
 """
+
 from __future__ import annotations
 
 from sklearn.base import BaseEstimator, TransformerMixin

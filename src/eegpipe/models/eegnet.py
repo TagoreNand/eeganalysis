@@ -4,6 +4,7 @@ Architecture (EEGNet-8,2): temporal conv -> depthwise spatial conv (learns per-f
 spatial filters, analogous to CSP) -> separable conv -> classifier. ~2k params, strong on
 small datasets, and the default baseline you should beat before reaching for anything bigger.
 """
+
 from __future__ import annotations
 
 import torch.nn as nn

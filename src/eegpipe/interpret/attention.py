@@ -6,6 +6,7 @@ post-/pre-norm math while requesting attention weights. This yields the *real* p
 epoch x epoch attention, and ``attention_rollout`` (Abnar & Zuidema, 2020) composes them into
 a single map showing which neighbouring epochs influenced each epoch's stage prediction.
 """
+
 from __future__ import annotations
 
 

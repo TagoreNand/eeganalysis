@@ -3,9 +3,10 @@
 Crops continuous epochs into fixed-length windows (the standard input contract for
 EEGNet / Conformer) and applies optional on-the-fly augmentations.
 """
+
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 

@@ -1,7 +1,12 @@
 from eegpipe.inference.predictor import Predictor
 
-__all__ = ["Predictor", "OnnxPredictor", "LSLStreamProcessor",
-           "HypnogramPredictor", "plot_hypnogram"]
+__all__ = [
+    "Predictor",
+    "OnnxPredictor",
+    "LSLStreamProcessor",
+    "HypnogramPredictor",
+    "plot_hypnogram",
+]
 
 
 def __getattr__(name):  # lazy imports so heavy/optional deps load only when used

@@ -5,6 +5,7 @@ This wrapper adds the training/val/test loops, class-weighted loss (vital for sl
 staging), optimiser + scheduler, and metric logging — so swapping architectures never
 touches training code (Template-Method pattern).
 """
+
 from __future__ import annotations
 
 import lightning as L
@@ -57,12 +58,13 @@ class LitEEGClassifier(L.LightningModule):
         return self._step(batch, "test")
 
     def predict_step(self, batch, _):
-        x = batch[0] if isinstance(batch, (list, tuple)) else batch
+        x = batch[0] if isinstance(batch, list | tuple) else batch
         return torch.softmax(self(x), dim=1)
 
     def configure_optimizers(self):
-        opt = torch.optim.AdamW(self.parameters(), lr=self.hparams.lr,
-                                weight_decay=self.hparams.weight_decay)
+        opt = torch.optim.AdamW(
+            self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
+        )
         sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=self.hparams.max_epochs)
         return {"optimizer": opt, "lr_scheduler": sched}
 
@@ -158,6 +160,7 @@ class LitSequenceClassifier(L.LightningModule):
             self.log(f"{stage}/f1_{name}", f1)
         if stage == "test":
             from eegpipe.utils.metrics import confusion
+
             self.test_confusion = confusion(trues, preds, self.n_classes)
             self.test_targets, self.test_preds = trues, preds
         self._buf[stage].clear()
@@ -169,11 +172,12 @@ class LitSequenceClassifier(L.LightningModule):
         self._epoch_end("test")
 
     def predict_step(self, batch, _):
-        x = batch[0] if isinstance(batch, (list, tuple)) else batch
+        x = batch[0] if isinstance(batch, list | tuple) else batch
         return torch.softmax(self(x), dim=-1)
 
     def configure_optimizers(self):
-        opt = torch.optim.AdamW(self.parameters(), lr=self.hparams.lr,
-                                weight_decay=self.hparams.weight_decay)
+        opt = torch.optim.AdamW(
+            self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
+        )
         sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=self.hparams.max_epochs)
         return {"optimizer": opt, "lr_scheduler": sched}

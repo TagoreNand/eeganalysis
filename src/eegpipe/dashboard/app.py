@@ -9,6 +9,7 @@ Tabs:
   4. Hypnogram  — sequence model -> full-night sleep stages
   5. Explain    — confusion matrix + Integrated-Gradients saliency (clinician trust)
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -66,8 +67,13 @@ with tab_topo:
     band = st.selectbox("Band", ["delta", "theta", "alpha", "beta", "gamma"], index=2)
     import matplotlib.pyplot as plt
 
-    bands = {"delta": (1, 4), "theta": (4, 8), "alpha": (8, 13),
-             "beta": (13, 30), "gamma": (30, 45)}
+    bands = {
+        "delta": (1, 4),
+        "theta": (4, 8),
+        "alpha": (8, 13),
+        "beta": (13, 30),
+        "gamma": (30, 45),
+    }
     lo, hi = bands[band]
     psd = raw.compute_psd(fmin=lo, fmax=hi, verbose="error")
     fig, ax = plt.subplots()
@@ -97,8 +103,10 @@ with tab_pred:
 
 with tab_hyp:
     st.subheader("Sleep hypnogram (sequence model)")
-    st.caption("Score this recording into AASM stages with a checkpoint trained via "
-               "eegpipe-sleep. Resamples to 100 Hz to match training.")
+    st.caption(
+        "Score this recording into AASM stages with a checkpoint trained via "
+        "eegpipe-sleep. Resamples to 100 Hz to match training."
+    )
     ck = st.text_input("Sequence checkpoint (.ckpt)", value="", key="hyp_ckpt")
     seq_len = st.slider("Sequence length (epochs)", 5, 40, 20)
     if ck:
@@ -123,8 +131,10 @@ with tab_hyp:
 
 with tab_explain:
     st.subheader("Explainability")
-    st.caption("Evidence behind the model: where it confuses stages, and which "
-               "channels/time-points drive a single prediction.")
+    st.caption(
+        "Evidence behind the model: where it confuses stages, and which "
+        "channels/time-points drive a single prediction."
+    )
 
     st.markdown("**Confusion matrix** (from the last `eegpipe-sleep` test run)")
     import json
@@ -134,9 +144,11 @@ with tab_explain:
         from eegpipe.interpret import plot_confusion_matrix
 
         cm = np.load("reports/confusion.npy")
-        labels = (json.load(open("reports/confusion_labels.json"))
-                  if os.path.exists("reports/confusion_labels.json")
-                  else [str(i) for i in range(len(cm))])
+        if os.path.exists("reports/confusion_labels.json"):
+            with open("reports/confusion_labels.json") as f:
+                labels = json.load(f)
+        else:
+            labels = [str(i) for i in range(len(cm))]
         st.pyplot(plot_confusion_matrix(cm, [str(x) for x in labels]).figure)
     else:
         st.caption("Run `eegpipe-sleep` to produce reports/confusion.npy.")

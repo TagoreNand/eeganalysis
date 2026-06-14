@@ -1,4 +1,5 @@
 """Euclidean Alignment domain adaptation (runnable: numpy/scipy only)."""
+
 import numpy as np
 import pytest
 
@@ -16,7 +17,7 @@ def test_euclidean_alignment_whitens_each_subject_to_identity():
     Xa = EuclideanAlignment().fit_transform(X, groups=groups)
     for g in (0, 1):
         cov = mean_covariance(Xa[groups == g])
-        assert np.allclose(cov, np.eye(4), atol=1e-4)   # aligned mean cov == identity
+        assert np.allclose(cov, np.eye(4), atol=1e-4)  # aligned mean cov == identity
 
 
 def test_alignment_preserves_shape_and_new_subject_path():
@@ -34,6 +35,6 @@ def test_riemannian_recentering_optional():
 
     rng = np.random.default_rng(2)
     A = rng.standard_normal((15, 4, 4))
-    C = np.einsum("nij,nkj->nik", A, A) + np.eye(4)   # SPD covariances
+    C = np.einsum("nij,nkj->nik", A, A) + np.eye(4)  # SPD covariances
     out = RiemannianRecentering().fit_transform(C, groups=np.zeros(15))
     assert out.shape == C.shape

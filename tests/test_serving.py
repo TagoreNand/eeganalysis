@@ -1,4 +1,5 @@
 """Regression-gate logic and (optional) API smoke tests."""
+
 import importlib.util
 import pathlib
 
@@ -40,5 +41,5 @@ def test_api_health_and_readiness():
 
     with TestClient(app) as client:
         assert client.get("/health").status_code == 200
-        assert client.get("/ready").status_code == 503   # no model loaded in test env
+        assert client.get("/ready").status_code == 503  # no model loaded in test env
         assert client.post("/predict", json={"data": [[0.0]], "sfreq": 100.0}).status_code == 503

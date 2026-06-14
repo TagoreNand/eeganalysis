@@ -1,4 +1,5 @@
 """Forward-pass shape tests for every backbone (skipped without torch)."""
+
 import pytest
 
 torch = pytest.importorskip("torch")

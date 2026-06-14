@@ -1,4 +1,5 @@
 """Matplotlib renderers for the interpretability artefacts (used by the dashboard & reports)."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -24,8 +25,15 @@ def plot_confusion_matrix(cm, class_names, normalize=True, ax=None, out_path=Non
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
             val = f"{cm[i, j]:.2f}" if normalize else f"{int(cm[i, j])}"
-            ax.text(j, i, val, ha="center", va="center", fontsize=8,
-                    color="white" if cm[i, j] > 0.5 else "black")
+            ax.text(
+                j,
+                i,
+                val,
+                ha="center",
+                va="center",
+                fontsize=8,
+                color="white" if cm[i, j] > 0.5 else "black",
+            )
     ax.figure.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     if out_path:
         ax.figure.savefig(out_path, dpi=120, bbox_inches="tight")

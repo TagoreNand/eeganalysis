@@ -5,6 +5,7 @@ sliding window, and emits a prediction every ``step`` seconds. This is the backb
 local closed-loop BCI. Marker/output predictions are pushed to a second LSL stream so a
 game or neurofeedback UI can subscribe.
 """
+
 from __future__ import annotations
 
 import time
@@ -18,8 +19,9 @@ log = get_logger(__name__)
 
 
 class LSLStreamProcessor:
-    def __init__(self, predictor, window_s: float = 4.0, step_s: float = 0.25,
-                 stream_type: str = "EEG"):
+    def __init__(
+        self, predictor, window_s: float = 4.0, step_s: float = 0.25, stream_type: str = "EEG"
+    ):
         self.predictor = predictor
         self.window_s, self.step_s = window_s, step_s
         self.stream_type = stream_type

@@ -1,4 +1,5 @@
 """Compose preprocessing steps and build them from config (Builder pattern)."""
+
 from __future__ import annotations
 
 from eegpipe.preprocessing import steps as _steps
@@ -50,11 +51,11 @@ class PreprocessingPipeline(BaseTransform):
 def build_preprocessing(cfg) -> PreprocessingPipeline:
     """Build a pipeline from a config list like::
 
-        preprocess:
-          steps:
-            - {name: bandpass, l_freq: 8, h_freq: 32}
-            - {name: resample, sfreq: 128}
-            - {name: ica, threshold: 0.8}
+    preprocess:
+      steps:
+        - {name: bandpass, l_freq: 8, h_freq: 32}
+        - {name: resample, sfreq: 128}
+        - {name: ica, threshold: 0.8}
     """
     steps = []
     for spec in cfg["steps"]:

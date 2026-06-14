@@ -4,6 +4,7 @@ Stages needing torch/onnx SKIP gracefully (and still run in CI where they're ins
 the classical stages (windows, split, align, band-power baseline, regression gate) execute
 here on installed deps, so this guards the whole orchestration end-to-end.
 """
+
 import importlib.util
 import pathlib
 

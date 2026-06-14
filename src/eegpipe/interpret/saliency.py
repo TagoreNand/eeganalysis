@@ -7,6 +7,7 @@ call?" — the kind of evidence a clinician needs before trusting a model.
 
 Works on per-trial models ``(B, C, T) -> (B, n_classes)``. No Captum dependency.
 """
+
 from __future__ import annotations
 
 import numpy as np

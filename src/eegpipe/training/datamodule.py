@@ -3,6 +3,7 @@
 Splits are passed in (already subject-aware) rather than computed here, so the same
 DataModule serves a single train run and each fold of cross-validation.
 """
+
 from __future__ import annotations
 
 import lightning as L
@@ -31,15 +32,22 @@ class EEGDataModule(L.LightningDataModule):
         self.train_transform = train_transform
 
     def setup(self, stage: str | None = None):
-        self.train_ds = EEGWindowsDataset(self.X[self.train_idx], self.y[self.train_idx],
-                                          transform=self.train_transform)
+        self.train_ds = EEGWindowsDataset(
+            self.X[self.train_idx], self.y[self.train_idx], transform=self.train_transform
+        )
         self.val_ds = EEGWindowsDataset(self.X[self.val_idx], self.y[self.val_idx])
         if self.test_idx is not None:
             self.test_ds = EEGWindowsDataset(self.X[self.test_idx], self.y[self.test_idx])
 
     def _dl(self, ds, shuffle):
-        return DataLoader(ds, batch_size=self.batch_size, shuffle=shuffle,
-                          num_workers=self.num_workers, pin_memory=True, drop_last=shuffle)
+        return DataLoader(
+            ds,
+            batch_size=self.batch_size,
+            shuffle=shuffle,
+            num_workers=self.num_workers,
+            pin_memory=True,
+            drop_last=shuffle,
+        )
 
     def train_dataloader(self):
         return self._dl(self.train_ds, True)
@@ -93,12 +101,25 @@ class SequenceEEGDataModule(L.LightningDataModule):
         if self.sampler_weights is not None:
             sampler = WeightedRandomSampler(
                 torch.as_tensor(self.sampler_weights, dtype=torch.double),
-                num_samples=len(self.train_idx), replacement=True,
+                num_samples=len(self.train_idx),
+                replacement=True,
             )
-            return DataLoader(self.train_ds, batch_size=self.batch_size, sampler=sampler,
-                              num_workers=self.num_workers, pin_memory=True, drop_last=True)
-        return DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True,
-                          num_workers=self.num_workers, pin_memory=True, drop_last=True)
+            return DataLoader(
+                self.train_ds,
+                batch_size=self.batch_size,
+                sampler=sampler,
+                num_workers=self.num_workers,
+                pin_memory=True,
+                drop_last=True,
+            )
+        return DataLoader(
+            self.train_ds,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+            pin_memory=True,
+            drop_last=True,
+        )
 
     def val_dataloader(self):
         from torch.utils.data import DataLoader

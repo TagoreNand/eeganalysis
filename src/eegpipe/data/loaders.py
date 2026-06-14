@@ -3,9 +3,10 @@
 Each loader normalises a very different on-disk format into one :class:`EpochsBundle`.
 All are registered with :data:`LOADER_REGISTRY` so ``build_loader("bci_iv_2a")`` works.
 """
+
 from __future__ import annotations
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -39,13 +40,23 @@ class MNESampleLoader(BaseDataLoader):
         events = mne.find_events(raw, stim_channel="STI 014", verbose="error")
         event_id = {"Auditory/Left": 1, "Auditory/Right": 2}
         epochs = mne.Epochs(
-            raw, events, event_id, self.tmin, self.tmax,
-            baseline=(None, 0), preload=True, verbose="error",
+            raw,
+            events,
+            event_id,
+            self.tmin,
+            self.tmax,
+            baseline=(None, 0),
+            preload=True,
+            verbose="error",
         )
         epochs.equalize_event_counts(list(event_id))
         subject_ids = np.zeros(len(epochs), dtype=int)  # single subject
-        return EpochsBundle(epochs, subject_ids, "auditory_side",
-                            metadata={"dataset": "mne_sample", "n_subjects": 1})
+        return EpochsBundle(
+            epochs,
+            subject_ids,
+            "auditory_side",
+            metadata={"dataset": "mne_sample", "n_subjects": 1},
+        )
 
 
 @register_loader("bci_iv_2a")
@@ -58,8 +69,14 @@ class MOABBLoader(BaseDataLoader):
 
     name = "bci_iv_2a"
 
-    def __init__(self, dataset: str = "BNCI2014_001", paradigm: str = "MotorImagery",
-                 fmin: float = 8.0, fmax: float = 32.0, **kw):
+    def __init__(
+        self,
+        dataset: str = "BNCI2014_001",
+        paradigm: str = "MotorImagery",
+        fmin: float = 8.0,
+        fmax: float = 32.0,
+        **kw,
+    ):
         super().__init__(**kw)
         self.dataset, self.paradigm = dataset, paradigm
         self.fmin, self.fmax = fmin, fmax
@@ -79,9 +96,14 @@ class MOABBLoader(BaseDataLoader):
         epochs.events[:, 2] = y
         subject_ids = meta["subject"].to_numpy()
         return EpochsBundle(
-            epochs, subject_ids, "motor_imagery",
-            metadata={"dataset": self.dataset, "classes": classes.tolist(),
-                      "n_subjects": int(meta["subject"].nunique())},
+            epochs,
+            subject_ids,
+            "motor_imagery",
+            metadata={
+                "dataset": self.dataset,
+                "classes": classes.tolist(),
+                "n_subjects": int(meta["subject"].nunique()),
+            },
         )
 
 
@@ -91,8 +113,9 @@ class BIDSDataLoader(BaseDataLoader):
 
     name = "bids"
 
-    def __init__(self, root: str, task: str, suffix: str = "eeg",
-                 tmin: float = -0.2, tmax: float = 0.8, **kw):
+    def __init__(
+        self, root: str, task: str, suffix: str = "eeg", tmin: float = -0.2, tmax: float = 0.8, **kw
+    ):
         super().__init__(**kw)
         self.root, self.task, self.suffix = root, task, suffix
         self.tmin, self.tmax = tmin, tmax
@@ -104,17 +127,30 @@ class BIDSDataLoader(BaseDataLoader):
         subs = list(subjects) if subjects else get_entity_vals(self.root, "subject")
         all_epochs, groups = [], []
         for sub in subs:
-            bp = BIDSPath(subject=str(sub), task=self.task, suffix=self.suffix,
-                          datatype="eeg", root=self.root)
+            bp = BIDSPath(
+                subject=str(sub), task=self.task, suffix=self.suffix, datatype="eeg", root=self.root
+            )
             raw = read_raw_bids(bp, verbose="error").load_data()
             events, event_id = mne.events_from_annotations(raw, verbose="error")
-            ep = mne.Epochs(raw, events, event_id, self.tmin, self.tmax,
-                            baseline=None, preload=True, verbose="error")
+            ep = mne.Epochs(
+                raw,
+                events,
+                event_id,
+                self.tmin,
+                self.tmax,
+                baseline=None,
+                preload=True,
+                verbose="error",
+            )
             all_epochs.append(ep)
             groups.append(np.full(len(ep), int(sub) if str(sub).isdigit() else hash(sub) % 10_000))
         epochs = mne.concatenate_epochs(all_epochs)
-        return EpochsBundle(epochs, np.concatenate(groups), "bids_task",
-                            metadata={"dataset": f"bids:{self.root}", "task": self.task})
+        return EpochsBundle(
+            epochs,
+            np.concatenate(groups),
+            "bids_task",
+            metadata={"dataset": f"bids:{self.root}", "task": self.task},
+        )
 
 
 @register_loader("sleep_edf")
@@ -128,13 +164,23 @@ class SleepEDFLoader(BaseDataLoader):
 
     name = "sleep_edf"
     STAGE_MAP = {  # AASM 5-class (N3/N4 merged per current guidelines)
-        "Sleep stage W": 0, "Sleep stage 1": 1, "Sleep stage 2": 2,
-        "Sleep stage 3": 3, "Sleep stage 4": 3, "Sleep stage R": 4,
+        "Sleep stage W": 0,
+        "Sleep stage 1": 1,
+        "Sleep stage 2": 2,
+        "Sleep stage 3": 3,
+        "Sleep stage 4": 3,
+        "Sleep stage R": 4,
     }
     STAGE_NAMES = ["W", "N1", "N2", "N3", "REM"]
 
-    def __init__(self, n_subjects=20, channels=("EEG Fpz-Cz", "EEG Pz-Oz"),
-                 recording=(1,), crop_wake_mins=30.0, **kw):
+    def __init__(
+        self,
+        n_subjects=20,
+        channels=("EEG Fpz-Cz", "EEG Pz-Oz"),
+        recording=(1,),
+        crop_wake_mins=30.0,
+        **kw,
+    ):
         super().__init__(**kw)
         self.n_subjects = n_subjects
         self.channels = list(channels)
@@ -146,8 +192,11 @@ class SleepEDFLoader(BaseDataLoader):
         if not self.crop_wake_mins:
             return
         ann = raw.annotations
-        onsets = [o for o, d in zip(ann.onset, ann.description)
-                  if d in self.STAGE_MAP and d != "Sleep stage W"]
+        onsets = [
+            o
+            for o, d in zip(ann.onset, ann.description, strict=False)
+            if d in self.STAGE_MAP and d != "Sleep stage W"
+        ]
         if not onsets:
             return
         pad = self.crop_wake_mins * 60.0
@@ -169,13 +218,28 @@ class SleepEDFLoader(BaseDataLoader):
             raw.pick(present or "eeg")
             self._crop_wake(raw)
             events, _ = mne.events_from_annotations(
-                raw, event_id=self.STAGE_MAP, chunk_duration=30.0, verbose="error")
-            ep = mne.Epochs(raw, events, tmin=0.0, tmax=30.0 - 1.0 / raw.info["sfreq"],
-                            baseline=None, preload=True, verbose="error")
+                raw, event_id=self.STAGE_MAP, chunk_duration=30.0, verbose="error"
+            )
+            ep = mne.Epochs(
+                raw,
+                events,
+                tmin=0.0,
+                tmax=30.0 - 1.0 / raw.info["sfreq"],
+                baseline=None,
+                preload=True,
+                verbose="error",
+            )
             all_ep.append(ep)
             groups.append(np.full(len(ep), sub))
         epochs = mne.concatenate_epochs(all_ep)
-        return EpochsBundle(epochs, np.concatenate(groups), "sleep_stage",
-                            metadata={"dataset": "sleep_edf", "n_classes": 5,
-                                      "stage_names": self.STAGE_NAMES,
-                                      "n_subjects": len(subs)})
+        return EpochsBundle(
+            epochs,
+            np.concatenate(groups),
+            "sleep_stage",
+            metadata={
+                "dataset": "sleep_edf",
+                "n_classes": 5,
+                "stage_names": self.STAGE_NAMES,
+                "n_subjects": len(subs),
+            },
+        )

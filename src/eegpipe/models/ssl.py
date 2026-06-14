@@ -8,6 +8,7 @@ we then transfer it into a sleep backbone and fine-tune on the few labelled reco
 The encoder here is the same :class:`EpochEncoder` the sleep models use, so its weights drop
 straight in via ``models.registry.load_pretrained_encoder`` (config: ``model.pretrained_encoder``).
 """
+
 from __future__ import annotations
 
 import lightning as L
@@ -56,8 +57,9 @@ class LitRelativePositioning(L.LightningModule):
         return torch.optim.AdamW(self.parameters(), lr=self.lr)
 
 
-def transfer_encoder(pretrained: nn.Module, n_classes: int, emb_dim: int,
-                     freeze: bool = False) -> nn.Module:
+def transfer_encoder(
+    pretrained: nn.Module, n_classes: int, emb_dim: int, freeze: bool = False
+) -> nn.Module:
     """Attach a fresh linear head to a pretrained encoder (simple linear-probe / fine-tune)."""
     if freeze:
         for p in pretrained.parameters():
@@ -86,8 +88,15 @@ class RelativePositioningDataset(Dataset):
     n_samples: number of pairs to generate (balanced 50/50 positive/negative).
     """
 
-    def __init__(self, X, recording_ids, tau_pos: int = 2, tau_neg: int = 10,
-                 n_samples: int = 10000, seed: int = 42):
+    def __init__(
+        self,
+        X,
+        recording_ids,
+        tau_pos: int = 2,
+        tau_neg: int = 10,
+        n_samples: int = 10000,
+        seed: int = 42,
+    ):
         if not _TORCH:
             raise ImportError("Install the DL extra: pip install 'eegpipe[dl]'")
         self.X = torch.as_tensor(np.ascontiguousarray(X), dtype=torch.float32)
@@ -109,7 +118,7 @@ class RelativePositioningDataset(Dataset):
                 lo, hi = max(0, i_pos - tau_pos), min(len(idx) - 1, i_pos + tau_pos)
                 cand = [j for j in range(lo, hi + 1) if j != i_pos]
                 label = 1
-            else:           # negative (far)
+            else:  # negative (far)
                 cand = [j for j in range(len(idx)) if abs(j - i_pos) >= tau_neg]
                 label = 0
             if not cand:

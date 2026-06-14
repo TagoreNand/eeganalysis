@@ -1,4 +1,5 @@
 """Shared fixtures. Synthetic data keeps unit tests fast and dependency-light."""
+
 import numpy as np
 import pytest
 

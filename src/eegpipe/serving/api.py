@@ -13,6 +13,7 @@ Backends, in priority order:
 Hardening: request-timing header, optional API-key auth (``EEGPIPE_API_KEY``), input-size
 guard (``EEGPIPE_MAX_ELEMENTS``), structured logging, and clean 503/413/401 responses.
 """
+
 from __future__ import annotations
 
 import os
@@ -62,7 +63,9 @@ async def lifespan(app: FastAPI):
     _STATE["version"] = os.environ.get("EEGPIPE_MODEL_VERSION", "0.1.0")
     if predictor is not None:
         n = predictor.n_classes or 0
-        _STATE["labels"] = getattr(predictor, "class_names", None) or [f"class_{i}" for i in range(n)]
+        _STATE["labels"] = getattr(predictor, "class_names", None) or [
+            f"class_{i}" for i in range(n)
+        ]
         log.info("Loaded %s backend (%s classes)", backend, n)
     else:
         _STATE["labels"] = []
@@ -91,8 +94,9 @@ def require_api_key(x_api_key: str | None = Header(default=None)):
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     p = _STATE.get("predictor")
-    return HealthResponse(status="ok", model_loaded=p is not None,
-                          n_classes=(p.n_classes if p else None))
+    return HealthResponse(
+        status="ok", model_loaded=p is not None, n_classes=(p.n_classes if p else None)
+    )
 
 
 @app.get("/ready")
@@ -105,8 +109,12 @@ def ready():
 @app.get("/version", response_model=VersionResponse)
 def version() -> VersionResponse:
     p = _STATE.get("predictor")
-    return VersionResponse(model_name=_STATE.get("name", ""), model_version=_STATE.get("version", ""),
-                           backend=_STATE.get("backend", "none"), n_classes=(p.n_classes if p else None))
+    return VersionResponse(
+        model_name=_STATE.get("name", ""),
+        model_version=_STATE.get("version", ""),
+        backend=_STATE.get("backend", "none"),
+        n_classes=(p.n_classes if p else None),
+    )
 
 
 @app.post("/predict", response_model=PredictResponse, dependencies=[Depends(require_api_key)])
@@ -128,10 +136,17 @@ def predict(req: PredictRequest) -> PredictResponse:
     labels = _STATE["labels"] or [f"class_{i}" for i in range(len(proba))]
     top = int(np.argmax(proba))
     return PredictResponse(
-        prediction=top, label=labels[top],
-        probabilities=[ClassProbability(label=l, probability=float(p)) for l, p in zip(labels, proba)],
-        model_name=_STATE.get("name", ""), model_version=_STATE.get("version", ""),
-        backend=_STATE.get("backend", "none"), inference_ms=round(dt, 2))
+        prediction=top,
+        label=labels[top],
+        probabilities=[
+            ClassProbability(label=lab, probability=float(p))
+            for lab, p in zip(labels, proba, strict=False)
+        ],
+        model_name=_STATE.get("name", ""),
+        model_version=_STATE.get("version", ""),
+        backend=_STATE.get("backend", "none"),
+        inference_ms=round(dt, 2),
+    )
 
 
 def run():  # console-script entry point: eegpipe-serve

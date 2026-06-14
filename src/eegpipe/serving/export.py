@@ -9,6 +9,7 @@ CLI (entry point ``eegpipe-export``)::
     eegpipe-export model.ckpt model.onnx --kind trial --channels 22 --times 256
     eegpipe-export sleep.ckpt sleep.onnx --kind sequence --channels 2 --times 3000 --seq-len 20
 """
+
 from __future__ import annotations
 
 import argparse
@@ -33,8 +34,9 @@ def _dummy(kind, n_channels, n_times, seq_len, device):
     return torch.randn(1, n_channels, n_times, device=device)
 
 
-def export_module_onnx(model, out, kind="trial", n_channels=22, n_times=256, seq_len=20,
-                       device="cpu", opset=17):
+def export_module_onnx(
+    model, out, kind="trial", n_channels=22, n_times=256, seq_len=20, device="cpu", opset=17
+):
     """Export an already-loaded ``nn.Module`` to ONNX (checkpoint-independent; unit-testable)."""
     import torch
 
@@ -44,20 +46,30 @@ def export_module_onnx(model, out, kind="trial", n_channels=22, n_times=256, seq
         dyn = {"input": {0: "batch", 1: "seq"}, "output": {0: "batch", 1: "seq"}}
     else:
         dyn = {"input": {0: "batch"}, "output": {0: "batch"}}
-    torch.onnx.export(model, dummy, out, input_names=["input"], output_names=["output"],
-                      dynamic_axes=dyn, opset_version=opset)
+    torch.onnx.export(
+        model,
+        dummy,
+        out,
+        input_names=["input"],
+        output_names=["output"],
+        dynamic_axes=dyn,
+        opset_version=opset,
+    )
     log.info("Exported ONNX -> %s (kind=%s, opset=%d)", out, kind, opset)
     return out
 
 
-def export_onnx(ckpt, out, kind="trial", n_channels=22, n_times=256, seq_len=20,
-                device="cpu", opset=17):
-    return export_module_onnx(_load(ckpt, kind, device), out, kind, n_channels, n_times,
-                              seq_len, device, opset)
+def export_onnx(
+    ckpt, out, kind="trial", n_channels=22, n_times=256, seq_len=20, device="cpu", opset=17
+):
+    return export_module_onnx(
+        _load(ckpt, kind, device), out, kind, n_channels, n_times, seq_len, device, opset
+    )
 
 
-def export_torchscript(ckpt, out, kind="trial", n_channels=22, n_times=256, seq_len=20,
-                       device="cpu"):
+def export_torchscript(
+    ckpt, out, kind="trial", n_channels=22, n_times=256, seq_len=20, device="cpu"
+):
     import torch
 
     model = _load(ckpt, kind, device)

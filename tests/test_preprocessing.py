@@ -1,4 +1,5 @@
 """Preprocessing pipeline builds from config and runs on synthetic MNE data."""
+
 import numpy as np
 import pytest
 
@@ -13,8 +14,12 @@ def _raw():
 def test_build_and_apply_pipeline():
     from eegpipe.preprocessing import build_preprocessing
 
-    cfg = {"steps": [{"name": "bandpass", "l_freq": 1.0, "h_freq": 40.0, "notch": None},
-                     {"name": "resample", "sfreq": 128.0}]}
+    cfg = {
+        "steps": [
+            {"name": "bandpass", "l_freq": 1.0, "h_freq": 40.0, "notch": None},
+            {"name": "resample", "sfreq": 128.0},
+        ]
+    }
     pipe = build_preprocessing(cfg)
     out = pipe.fit_transform(_raw())
     assert out.info["sfreq"] == 128.0

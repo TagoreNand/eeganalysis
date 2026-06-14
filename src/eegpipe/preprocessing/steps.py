@@ -1,4 +1,5 @@
 """Concrete preprocessing steps. Each is configurable from Hydra and composable."""
+
 from __future__ import annotations
 
 from eegpipe.preprocessing.base import BaseTransform
@@ -58,8 +59,13 @@ class ICAArtifactRemoval(BaseTransform):
     stateless = False
     ARTIFACT_LABELS = ("eye blink", "muscle artifact", "heart beat", "line noise", "channel noise")
 
-    def __init__(self, n_components: float = 0.99, method: str = "infomax",
-                 threshold: float = 0.8, random_state: int = 42):
+    def __init__(
+        self,
+        n_components: float = 0.99,
+        method: str = "infomax",
+        threshold: float = 0.8,
+        random_state: int = 42,
+    ):
         self.n_components, self.method = n_components, method
         self.threshold, self.random_state = threshold, random_state
         self._ica = None
@@ -70,8 +76,10 @@ class ICAArtifactRemoval(BaseTransform):
 
         # ICLabel expects an infomax-fit ICA on 1-100Hz, common-average referenced data.
         self._ica = mne.preprocessing.ICA(
-            n_components=self.n_components, method=self.method,
-            fit_params=dict(extended=True), random_state=self.random_state,
+            n_components=self.n_components,
+            method=self.method,
+            fit_params=dict(extended=True),
+            random_state=self.random_state,
         )
         self._ica.fit(inst, verbose="error")
         try:
@@ -80,10 +88,13 @@ class ICAArtifactRemoval(BaseTransform):
             labels = label_components(inst, self._ica, method="iclabel")
             probs, names = labels["y_pred_proba"], labels["labels"]
             self._exclude = [
-                i for i, (p, n) in enumerate(zip(probs, names))
+                i
+                for i, (p, n) in enumerate(zip(probs, names, strict=False))
                 if n in self.ARTIFACT_LABELS and p >= self.threshold
             ]
-            log.info("ICLabel flagged %d/%d components as artefacts", len(self._exclude), len(names))
+            log.info(
+                "ICLabel flagged %d/%d components as artefacts", len(self._exclude), len(names)
+            )
         except ImportError:
             log.warning("mne-icalabel not installed; falling back to EOG correlation.")
             eog_idx, _ = self._ica.find_bads_eog(inst, verbose="error")
@@ -115,8 +126,9 @@ class AutoRejectStep(BaseTransform):
     def fit(self, epochs, y=None):
         from autoreject import AutoReject
 
-        self._ar = AutoReject(n_interpolate=list(self.n_interpolate),
-                              random_state=self.random_state, verbose=False)
+        self._ar = AutoReject(
+            n_interpolate=list(self.n_interpolate), random_state=self.random_state, verbose=False
+        )
         self._ar.fit(epochs)
         return self
 

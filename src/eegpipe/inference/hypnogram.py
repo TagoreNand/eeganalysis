@@ -4,6 +4,7 @@ A trained sequence model sees L epochs at a time. To label a whole night we slid
 overlapping windows (stride 1, end-padded) and **average the softmax** over all windows that
 cover each epoch — this smooths boundary effects and is more robust than a single pass.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -12,8 +13,14 @@ import numpy as np
 class HypnogramPredictor:
     STAGE_NAMES = ["W", "N1", "N2", "N3", "REM"]
 
-    def __init__(self, ckpt_path: str, seq_len: int = 20, device: str = "cpu",
-                 stage_names: list[str] | None = None, batch: int = 64):
+    def __init__(
+        self,
+        ckpt_path: str,
+        seq_len: int = 20,
+        device: str = "cpu",
+        stage_names: list[str] | None = None,
+        batch: int = 64,
+    ):
         import torch
 
         from eegpipe.models.base import LitSequenceClassifier
@@ -22,7 +29,9 @@ class HypnogramPredictor:
         self.model = LitSequenceClassifier.load_from_checkpoint(ckpt_path, map_location=device)
         self.model.eval().to(device)
         self.seq_len, self.device, self.batch = seq_len, device, batch
-        self.stage_names = stage_names or getattr(self.model, "class_names", None) or self.STAGE_NAMES
+        self.stage_names = (
+            stage_names or getattr(self.model, "class_names", None) or self.STAGE_NAMES
+        )
 
     def predict(self, X: np.ndarray, recording_ids: np.ndarray | None = None):
         """X: (n_epochs, C, T) for one or more nights -> (stages, probabilities)."""
@@ -39,17 +48,22 @@ class HypnogramPredictor:
         with torch.no_grad():
             for i in range(0, len(windows), self.batch):
                 wb = windows[i : i + self.batch]
-                xb = Xt[torch.as_tensor(wb, device=self.device)]   # (b, L, C, T)
+                xb = Xt[torch.as_tensor(wb, device=self.device)]  # (b, L, C, T)
                 pb = torch.softmax(self.model(xb), dim=-1).cpu().numpy()  # (b, L, n_cls)
-                for w, p in zip(wb, pb):
+                for w, p in zip(wb, pb, strict=False):
                     acc[w] += p
                     cnt[w] += 1
         proba = acc / np.maximum(cnt[:, None], 1.0)
         return proba.argmax(1), proba
 
 
-def plot_hypnogram(stages, stage_names: list[str] | None = None, epoch_sec: int = 30,
-                   out_path: str | None = None, ax=None):
+def plot_hypnogram(
+    stages,
+    stage_names: list[str] | None = None,
+    epoch_sec: int = 30,
+    out_path: str | None = None,
+    ax=None,
+):
     """Render a conventional hypnogram (W at top, time in hours). Returns the Axes."""
     import matplotlib.pyplot as plt
 
@@ -65,8 +79,9 @@ def plot_hypnogram(stages, stage_names: list[str] | None = None, epoch_sec: int 
     # shade REM spans for readability
     rem_row = row.get(names.index("REM")) if "REM" in names else None
     if rem_row is not None:
-        ax.fill_between(t, ypos, rem_row, where=(ypos == rem_row), step="post",
-                        color="#d1495b", alpha=0.5)
+        ax.fill_between(
+            t, ypos, rem_row, where=(ypos == rem_row), step="post", color="#d1495b", alpha=0.5
+        )
     ax.set_yticks(range(len(display)))
     ax.set_yticklabels(display)
     ax.invert_yaxis()

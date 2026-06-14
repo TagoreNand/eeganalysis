@@ -1,4 +1,5 @@
 """eegpipe: a modular EEG/BCI machine-learning pipeline."""
+
 from importlib.metadata import PackageNotFoundError, version
 
 try:

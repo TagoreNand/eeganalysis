@@ -10,6 +10,7 @@ them safe and usable on a brand-new test subject: align that subject by its own 
 * :class:`RiemannianRecentering` (Zanini et al., 2018) — recentre covariance matrices to the
   identity on the SPD manifold. Pairs with the Riemannian tangent-space classifier.
 """
+
 from __future__ import annotations
 
 import numpy as np

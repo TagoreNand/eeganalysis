@@ -7,10 +7,11 @@ variance, this inflates accuracy by 10-30 points and the model fails to generali
 Every splitter here is *group-aware by construction*. The default training entry point
 uses these — never plain ``KFold`` — and :func:`assert_no_subject_leakage` guards it.
 """
+
 from __future__ import annotations
 
 import warnings
-from typing import Iterator
+from collections.abc import Iterator
 
 import numpy as np
 from sklearn.model_selection import GroupKFold, LeaveOneGroupOut, StratifiedGroupKFold
@@ -36,7 +37,9 @@ def subject_kfold(
             stacklevel=2,
         )
         n_splits = n_subjects
-    splitter = StratifiedGroupKFold(n_splits=n_splits) if stratified else GroupKFold(n_splits=n_splits)
+    splitter = (
+        StratifiedGroupKFold(n_splits=n_splits) if stratified else GroupKFold(n_splits=n_splits)
+    )
     yield from splitter.split(X, y, groups)
 
 
@@ -62,16 +65,12 @@ def nested_subject_cv(
     """
     for outer_train, test_idx in subject_kfold(X, y, groups, n_splits=n_outer):
         inner_groups = groups[outer_train]
-        inner = subject_kfold(
-            X[outer_train], y[outer_train], inner_groups, n_splits=n_inner
-        )
+        inner = subject_kfold(X[outer_train], y[outer_train], inner_groups, n_splits=n_inner)
         tr_rel, val_rel = next(inner)  # first inner fold; loop externally for full nesting
         yield outer_train[tr_rel], outer_train[val_rel], test_idx
 
 
-def assert_no_subject_leakage(
-    train_groups: np.ndarray, test_groups: np.ndarray
-) -> None:
+def assert_no_subject_leakage(train_groups: np.ndarray, test_groups: np.ndarray) -> None:
     """Raise if any subject appears in both partitions. Call inside every fold."""
     overlap = set(np.unique(train_groups)) & set(np.unique(test_groups))
     if overlap:

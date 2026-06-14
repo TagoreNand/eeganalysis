@@ -1,4 +1,5 @@
 """Pydantic request/response models — the typed contract for the inference API."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
@@ -9,8 +10,9 @@ class PredictRequest(BaseModel):
     data: list = Field(..., description="Nested list of EEG samples (channels x times).")
     sfreq: float = Field(..., gt=0, description="Sampling frequency in Hz.")
 
-    model_config = {"json_schema_extra": {
-        "example": {"data": [[0.1, 0.2], [0.0, -0.1]], "sfreq": 128.0}}}
+    model_config = {
+        "json_schema_extra": {"example": {"data": [[0.1, 0.2], [0.0, -0.1]], "sfreq": 128.0}}
+    }
 
 
 class ClassProbability(BaseModel):

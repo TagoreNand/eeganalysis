@@ -4,6 +4,7 @@ The conv stem learns local temporal+spatial features (like EEGNet's first blocks
 Transformer encoder then models long-range temporal dependencies via self-attention.
 Stronger than EEGNet when you have more data, at higher compute cost.
 """
+
 from __future__ import annotations
 
 import torch.nn as nn
@@ -26,8 +27,8 @@ class PatchEmbedding(nn.Module):
         self.proj = nn.Conv2d(emb_dim, emb_dim, (1, 1))
 
     def forward(self, x):
-        x = x.unsqueeze(1)            # (B, 1, C, T)
-        x = self.tokenizer(x)         # (B, E, 1, T')
+        x = x.unsqueeze(1)  # (B, 1, C, T)
+        x = self.tokenizer(x)  # (B, E, 1, T')
         x = self.proj(x)
         return rearrange(x, "b e 1 t -> b t e")  # (B, seq_len, emb_dim)
 
@@ -47,15 +48,19 @@ class EEGConformer(nn.Module):
         super().__init__()
         self.embed = PatchEmbedding(n_channels, emb_dim)
         layer = nn.TransformerEncoderLayer(
-            d_model=emb_dim, nhead=n_heads, dim_feedforward=emb_dim * mlp_ratio,
-            dropout=dropout, activation="gelu", batch_first=True,
+            d_model=emb_dim,
+            nhead=n_heads,
+            dim_feedforward=emb_dim * mlp_ratio,
+            dropout=dropout,
+            activation="gelu",
+            batch_first=True,
         )
         self.encoder = nn.TransformerEncoder(layer, num_layers=depth)
         self.norm = nn.LayerNorm(emb_dim)
         self.head = nn.Linear(emb_dim, n_classes)
 
-    def forward(self, x):                 # x: (B, C, T)
-        tokens = self.embed(x)            # (B, seq, emb)
+    def forward(self, x):  # x: (B, C, T)
+        tokens = self.embed(x)  # (B, seq, emb)
         z = self.encoder(tokens)
-        z = self.norm(z).mean(dim=1)      # global average pool over tokens
+        z = self.norm(z).mean(dim=1)  # global average pool over tokens
         return self.head(z)

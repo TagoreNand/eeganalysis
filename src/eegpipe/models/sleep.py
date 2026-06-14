@@ -6,6 +6,7 @@ epochs (BiLSTM / self-attention / temporal U-Net). The encoder is *injectable*: 
 (:class:`eegpipe.models.foundation.FoundationEncoderAdapter`); otherwise a fresh
 ``EpochEncoder`` is built. Any encoder must expose ``.emb_dim`` and ``.encode_sequence``.
 """
+
 from __future__ import annotations
 
 import math
@@ -21,10 +22,17 @@ class EpochEncoder(nn.Module):
         super().__init__()
         k, s = max(2, sfreq // 2), max(1, sfreq // 16)
         self.net = nn.Sequential(
-            nn.Conv1d(n_channels, 64, k, s, padding=k // 2), nn.BatchNorm1d(64), nn.GELU(),
-            nn.MaxPool1d(8, 8), nn.Dropout(0.3),
-            nn.Conv1d(64, 128, 8, padding=4), nn.BatchNorm1d(128), nn.GELU(),
-            nn.Conv1d(128, 128, 8, padding=4), nn.BatchNorm1d(128), nn.GELU(),
+            nn.Conv1d(n_channels, 64, k, s, padding=k // 2),
+            nn.BatchNorm1d(64),
+            nn.GELU(),
+            nn.MaxPool1d(8, 8),
+            nn.Dropout(0.3),
+            nn.Conv1d(64, 128, 8, padding=4),
+            nn.BatchNorm1d(128),
+            nn.GELU(),
+            nn.Conv1d(128, 128, 8, padding=4),
+            nn.BatchNorm1d(128),
+            nn.GELU(),
             nn.MaxPool1d(4, 4),
             nn.AdaptiveAvgPool1d(1),
         )
@@ -36,8 +44,8 @@ class EpochEncoder(nn.Module):
 
     def encode_sequence(self, x):
         """(B, L, C, T) -> (B, L, emb_dim)."""
-        b, l, c, t = x.shape
-        return self.forward(x.reshape(b * l, c, t)).reshape(b, l, -1)
+        b, length, c, t = x.shape
+        return self.forward(x.reshape(b * length, c, t)).reshape(b, length, -1)
 
 
 def _resolve_encoder(encoder, n_channels, emb_dim, sfreq):
@@ -53,12 +61,29 @@ class TinySleepNet(nn.Module):
 
     is_sequence = True
 
-    def __init__(self, n_channels, n_times, n_classes, emb_dim=128, lstm_hidden=128,
-                 lstm_layers=1, dropout=0.5, sfreq=100, bidirectional=True, encoder=None):
+    def __init__(
+        self,
+        n_channels,
+        n_times,
+        n_classes,
+        emb_dim=128,
+        lstm_hidden=128,
+        lstm_layers=1,
+        dropout=0.5,
+        sfreq=100,
+        bidirectional=True,
+        encoder=None,
+    ):
         super().__init__()
         self.encoder, emb_dim = _resolve_encoder(encoder, n_channels, emb_dim, sfreq)
-        self.lstm = nn.LSTM(emb_dim, lstm_hidden, lstm_layers, batch_first=True,
-                            bidirectional=bidirectional, dropout=dropout if lstm_layers > 1 else 0.0)
+        self.lstm = nn.LSTM(
+            emb_dim,
+            lstm_hidden,
+            lstm_layers,
+            batch_first=True,
+            bidirectional=bidirectional,
+            dropout=dropout if lstm_layers > 1 else 0.0,
+        )
         out_dim = lstm_hidden * (2 if bidirectional else 1)
         self.skip = nn.Linear(emb_dim, out_dim)
         self.dropout = nn.Dropout(dropout)
@@ -90,14 +115,31 @@ class SleepTransformer(nn.Module):
 
     is_sequence = True
 
-    def __init__(self, n_channels, n_times, n_classes, emb_dim=128, depth=4, n_heads=8,
-                 mlp_ratio=4, dropout=0.3, sfreq=100, max_len=512, encoder=None):
+    def __init__(
+        self,
+        n_channels,
+        n_times,
+        n_classes,
+        emb_dim=128,
+        depth=4,
+        n_heads=8,
+        mlp_ratio=4,
+        dropout=0.3,
+        sfreq=100,
+        max_len=512,
+        encoder=None,
+    ):
         super().__init__()
         self.encoder, emb_dim = _resolve_encoder(encoder, n_channels, emb_dim, sfreq)
         self.pos = _PositionalEncoding(emb_dim, max_len)
         layer = nn.TransformerEncoderLayer(
-            d_model=emb_dim, nhead=n_heads, dim_feedforward=emb_dim * mlp_ratio,
-            dropout=dropout, activation="gelu", batch_first=True)
+            d_model=emb_dim,
+            nhead=n_heads,
+            dim_feedforward=emb_dim * mlp_ratio,
+            dropout=dropout,
+            activation="gelu",
+            batch_first=True,
+        )
         self.transformer = nn.TransformerEncoder(layer, num_layers=depth)
         self.norm = nn.LayerNorm(emb_dim)
         self.head = nn.Linear(emb_dim, n_classes)
@@ -111,8 +153,13 @@ class _DoubleConv(nn.Module):
     def __init__(self, cin, cout):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Conv1d(cin, cout, 3, padding=1), nn.BatchNorm1d(cout), nn.GELU(),
-            nn.Conv1d(cout, cout, 3, padding=1), nn.BatchNorm1d(cout), nn.GELU())
+            nn.Conv1d(cin, cout, 3, padding=1),
+            nn.BatchNorm1d(cout),
+            nn.GELU(),
+            nn.Conv1d(cout, cout, 3, padding=1),
+            nn.BatchNorm1d(cout),
+            nn.GELU(),
+        )
 
     def forward(self, x):
         return self.net(x)
@@ -123,8 +170,18 @@ class UTime(nn.Module):
 
     is_sequence = True
 
-    def __init__(self, n_channels, n_times, n_classes, emb_dim=128, base=64, depth=3,
-                 pool=2, sfreq=100, encoder=None):
+    def __init__(
+        self,
+        n_channels,
+        n_times,
+        n_classes,
+        emb_dim=128,
+        base=64,
+        depth=3,
+        pool=2,
+        sfreq=100,
+        encoder=None,
+    ):
         super().__init__()
         self.encoder, emb_dim = _resolve_encoder(encoder, n_channels, emb_dim, sfreq)
         self.depth, self.pool = depth, pool
@@ -133,14 +190,18 @@ class UTime(nn.Module):
         self.poolL = nn.MaxPool1d(pool)
         self.bottleneck = _DoubleConv(dims[-1], dims[-1] * 2)
         self.ups = nn.ModuleList(
-            nn.ConvTranspose1d(dims[-1] * 2 if i == 0 else dims[depth - i + 1],
-                               dims[depth - i], pool, stride=pool) for i in range(depth))
+            nn.ConvTranspose1d(
+                dims[-1] * 2 if i == 0 else dims[depth - i + 1], dims[depth - i], pool, stride=pool
+            )
+            for i in range(depth)
+        )
         self.dec = nn.ModuleList(
-            _DoubleConv(dims[depth - i] * 2, dims[depth - i]) for i in range(depth))
+            _DoubleConv(dims[depth - i] * 2, dims[depth - i]) for i in range(depth)
+        )
         self.head = nn.Conv1d(dims[1], n_classes, 1)
 
     def forward(self, x):
-        e = self.encoder.encode_sequence(x).transpose(1, 2)   # (B, emb, L)
+        e = self.encoder.encode_sequence(x).transpose(1, 2)  # (B, emb, L)
         L0 = e.size(-1)
         mult = self.pool**self.depth
         pad = (mult - L0 % mult) % mult
@@ -152,7 +213,7 @@ class UTime(nn.Module):
             skips.append(h)
             h = self.poolL(h)
         h = self.bottleneck(h)
-        for up, dec, skip in zip(self.ups, self.dec, reversed(skips)):
+        for up, dec, skip in zip(self.ups, self.dec, reversed(skips), strict=False):
             h = up(h)
             h = dec(torch.cat([h, skip], dim=1))
         return self.head(h)[..., :L0].transpose(1, 2)

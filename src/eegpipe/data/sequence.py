@@ -12,6 +12,7 @@ Two hard requirements, both handled here:
      the epoch array *once* and store only integer window indices; the Dataset gathers on
      access. Overlap then costs indices, not gigabytes.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -52,7 +53,7 @@ def make_sequence_windows(
 
     windows: list[np.ndarray] = []
     seq_groups: list = []
-    for start, end in zip(bounds[:-1], bounds[1:]):
+    for start, end in zip(bounds[:-1], bounds[1:], strict=False):
         run = np.arange(start, end)
         if len(run) < seq_len:
             warnings.warn(
@@ -106,15 +107,13 @@ class SleepSequenceDataset(Dataset):
 
     def __getitem__(self, idx: int):
         w = self.windows[idx]
-        x = self.X[w]          # (L, C, T)
+        x = self.X[w]  # (L, C, T)
         if self.transform is not None:
             x = torch.stack([self.transform(e) for e in x])
-        return x, self.y[w]    # (L, C, T), (L,)
+        return x, self.y[w]  # (L, C, T), (L,)
 
 
-def sequence_sampler_weights(
-    y: np.ndarray, windows: np.ndarray, class_weights
-) -> np.ndarray:
+def sequence_sampler_weights(y: np.ndarray, windows: np.ndarray, class_weights) -> np.ndarray:
     """Per-window sampling weight for a WeightedRandomSampler.
 
     Each window is weighted by the *mean* inverse-frequency weight of the epochs it contains,
@@ -122,5 +121,5 @@ def sequence_sampler_weights(
     Combats the N2-dominated imbalance without discarding majority data.
     """
     w = np.asarray(class_weights, dtype="float64")
-    labels = np.asarray(y)[windows]          # (n_windows, seq_len)
+    labels = np.asarray(y)[windows]  # (n_windows, seq_len)
     return w[labels].mean(axis=1)

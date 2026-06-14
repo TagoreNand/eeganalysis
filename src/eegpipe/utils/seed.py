@@ -3,6 +3,7 @@
 Reproducibility in EEG matters doubly: small datasets mean a different seed can swing
 cross-validation AUC by several points. Always log the seed alongside metrics.
 """
+
 from __future__ import annotations
 
 import os
@@ -21,7 +22,7 @@ def seed_everything(seed: int = 42, deterministic: bool = True) -> int:
     """
     os.environ["PYTHONHASHSEED"] = str(seed)
     random.seed(seed)
-    np.random.seed(seed)
+    np.random.seed(seed)  # noqa: NPY002 - intentionally seed the global legacy RNG
     try:
         import torch
 

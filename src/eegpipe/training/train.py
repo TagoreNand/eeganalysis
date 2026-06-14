@@ -5,6 +5,7 @@ Run from the repo root (editable install)::
     eegpipe-train data=bci_iv_2a model=eegnet training.logger=mlflow
     eegpipe-train data=mne_sample model=eegnet training.fast_dev_run=true
 """
+
 from __future__ import annotations
 
 import hydra
@@ -20,8 +21,9 @@ def _make_logger(name: str, cfg: DictConfig):
     if name == "mlflow":
         from lightning.pytorch.loggers import MLFlowLogger
 
-        return MLFlowLogger(experiment_name=cfg.experiment_name,
-                            tracking_uri=cfg.get("mlflow_uri", "file:./mlruns"))
+        return MLFlowLogger(
+            experiment_name=cfg.experiment_name, tracking_uri=cfg.get("mlflow_uri", "file:./mlruns")
+        )
     if name == "wandb":
         from lightning.pytorch.loggers import WandbLogger
 
@@ -64,13 +66,30 @@ def main(cfg: DictConfig) -> float:
     classes, counts = np.unique(y[train_idx], return_counts=True)
     class_weights = (counts.sum() / (len(classes) * counts)).tolist()
 
-    dm = EEGDataModule(X, y, train_idx, val_idx, test_idx,
-                       batch_size=cfg.training.batch_size, num_workers=cfg.training.num_workers)
-    model = build_model(cfg.model, n_channels=X.shape[1], n_times=X.shape[2],
-                        n_classes=int(len(classes)), class_weights=class_weights)
+    dm = EEGDataModule(
+        X,
+        y,
+        train_idx,
+        val_idx,
+        test_idx,
+        batch_size=cfg.training.batch_size,
+        num_workers=cfg.training.num_workers,
+    )
+    model = build_model(
+        cfg.model,
+        n_channels=X.shape[1],
+        n_times=X.shape[2],
+        n_classes=int(len(classes)),
+        class_weights=class_weights,
+    )
 
-    ckpt = ModelCheckpoint(dirpath="models_store", monitor="val/acc", mode="max",
-                           filename=f"{cfg.model.name}-{{epoch}}-{{val/acc:.3f}}", save_top_k=1)
+    ckpt = ModelCheckpoint(
+        dirpath="models_store",
+        monitor="val/acc",
+        mode="max",
+        filename=f"{cfg.model.name}-{{epoch}}-{{val/acc:.3f}}",
+        save_top_k=1,
+    )
     early = EarlyStopping(monitor="val/acc", mode="max", patience=cfg.training.patience)
     trainer = L.Trainer(
         max_epochs=cfg.training.max_epochs,

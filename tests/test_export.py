@@ -1,4 +1,5 @@
 """ONNX export + ONNX-runtime inference parity (skips without torch/onnx)."""
+
 import numpy as np
 import pytest
 
@@ -18,4 +19,4 @@ def test_onnx_export_and_runtime_inference(tmp_path):
     predictor = OnnxPredictor(str(out))
     proba = predictor.predict_proba(np.random.randn(4, 8, 128).astype("float32"))
     assert proba.shape == (4, 3)
-    assert np.allclose(proba.sum(1), 1.0, atol=1e-4)   # valid softmax
+    assert np.allclose(proba.sum(1), 1.0, atol=1e-4)  # valid softmax

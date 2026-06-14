@@ -1,4 +1,5 @@
 """Feature extractors produce correct shapes / value ranges."""
+
 import numpy as np
 import pytest
 

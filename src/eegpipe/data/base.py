@@ -5,11 +5,12 @@ interface so the rest of the pipeline never knows which dataset it is training o
 This is the Strategy pattern: ``build_loader(cfg)`` returns a concrete strategy,
 callers depend only on :class:`BaseDataLoader`.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Sequence
 
 import numpy as np
 
@@ -30,7 +31,7 @@ class EpochsBundle:
     metadata:    arbitrary provenance (dataset name, paradigm, montage, ...).
     """
 
-    epochs: "object"  # mne.BaseEpochs (kept loose to avoid a hard import here)
+    epochs: object  # mne.BaseEpochs (kept loose to avoid a hard import here)
     subject_ids: np.ndarray
     label_name: str = "target"
     metadata: dict = field(default_factory=dict)

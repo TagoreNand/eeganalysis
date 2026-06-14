@@ -10,6 +10,7 @@ Run::
     eegpipe-sleep data=sleep_edf model=sleep_seqnet training=sleep preprocess=sleep
     eegpipe-sleep ... training.fast_dev_run=true     # quick smoke test
 """
+
 from __future__ import annotations
 
 import json
@@ -55,15 +56,27 @@ def main(cfg: DictConfig) -> float:
 
     # 2) Build epoch sequences (never crossing a night) and split by subject over windows
     windows, seq_groups = make_sequence_windows(
-        rec, seq_len=cfg.training.seq_len, stride=cfg.training.get("stride", None))
-    log.info("Built %d sequences of length %d from %d epochs",
-             len(windows), cfg.training.seq_len, len(y))
+        rec, seq_len=cfg.training.seq_len, stride=cfg.training.get("stride", None)
+    )
+    log.info(
+        "Built %d sequences of length %d from %d epochs", len(windows), cfg.training.seq_len, len(y)
+    )
 
-    folds = list(subject_kfold(windows, seq_groups, seq_groups,
-                               n_splits=cfg.training.n_splits, stratified=False))
+    folds = list(
+        subject_kfold(
+            windows, seq_groups, seq_groups, n_splits=cfg.training.n_splits, stratified=False
+        )
+    )
     trainval, test_idx = folds[cfg.training.fold]
-    inner = list(subject_kfold(windows[trainval], seq_groups[trainval], seq_groups[trainval],
-                               n_splits=4, stratified=False))
+    inner = list(
+        subject_kfold(
+            windows[trainval],
+            seq_groups[trainval],
+            seq_groups[trainval],
+            n_splits=4,
+            stratified=False,
+        )
+    )
     tr_rel, val_rel = inner[0]
     train_idx, val_idx = trainval[tr_rel], trainval[val_rel]
     assert_no_subject_leakage(seq_groups[train_idx], seq_groups[test_idx])
@@ -75,26 +88,53 @@ def main(cfg: DictConfig) -> float:
     class_weights = np.ones(n_classes)
     class_weights[classes] = counts.sum() / (len(classes) * counts)
     class_weights = class_weights.tolist()
-    log.info("class weights: %s", {(stage_names or range(n_classes))[i]: round(w, 2)
-                                   for i, w in enumerate(class_weights)})
-    sampler_w = (sequence_sampler_weights(y, windows[train_idx], class_weights)
-                 if cfg.training.weighted_sampler else None)
+    log.info(
+        "class weights: %s",
+        {(stage_names or range(n_classes))[i]: round(w, 2) for i, w in enumerate(class_weights)},
+    )
+    sampler_w = (
+        sequence_sampler_weights(y, windows[train_idx], class_weights)
+        if cfg.training.weighted_sampler
+        else None
+    )
 
     dm = SequenceEEGDataModule(
-        X, y, windows, train_idx, val_idx, test_idx,
-        batch_size=cfg.training.batch_size, num_workers=cfg.training.num_workers,
-        sampler_weights=sampler_w)
+        X,
+        y,
+        windows,
+        train_idx,
+        val_idx,
+        test_idx,
+        batch_size=cfg.training.batch_size,
+        num_workers=cfg.training.num_workers,
+        sampler_weights=sampler_w,
+    )
     model = build_sequence_model(
-        cfg.model, n_channels=X.shape[1], n_times=X.shape[2], n_classes=n_classes,
-        class_weights=class_weights, class_names=stage_names)
+        cfg.model,
+        n_channels=X.shape[1],
+        n_times=X.shape[2],
+        n_classes=n_classes,
+        class_weights=class_weights,
+        class_names=stage_names,
+    )
 
-    ckpt = ModelCheckpoint(dirpath="models_store", monitor="val/macro_f1", mode="max",
-                           filename="sleep-{epoch}-{val/macro_f1:.3f}", save_top_k=1)
+    ckpt = ModelCheckpoint(
+        dirpath="models_store",
+        monitor="val/macro_f1",
+        mode="max",
+        filename="sleep-{epoch}-{val/macro_f1:.3f}",
+        save_top_k=1,
+    )
     early = EarlyStopping(monitor="val/macro_f1", mode="max", patience=cfg.training.patience)
     trainer = L.Trainer(
-        max_epochs=cfg.training.max_epochs, accelerator="auto",
-        logger=_make_logger(cfg.training.logger, cfg), callbacks=[ckpt, early],
-        gradient_clip_val=1.0, fast_dev_run=cfg.training.fast_dev_run, log_every_n_steps=10)
+        max_epochs=cfg.training.max_epochs,
+        accelerator="auto",
+        logger=_make_logger(cfg.training.logger, cfg),
+        callbacks=[ckpt, early],
+        gradient_clip_val=1.0,
+        fast_dev_run=cfg.training.fast_dev_run,
+        log_every_n_steps=10,
+    )
     trainer.fit(model, dm)
 
     if cfg.training.fast_dev_run:
@@ -107,8 +147,11 @@ def main(cfg: DictConfig) -> float:
         labels = stage_names or list(range(model.n_classes))
         Path("reports/confusion_labels.json").write_text(json.dumps(labels))
     log.info("Best checkpoint: %s", ckpt.best_model_path)
-    log.info("Test macro-F1=%.3f  kappa=%.3f", results.get("test/macro_f1", 0),
-             results.get("test/kappa", 0))
+    log.info(
+        "Test macro-F1=%.3f  kappa=%.3f",
+        results.get("test/macro_f1", 0),
+        results.get("test/kappa", 0),
+    )
     return float(results.get("test/macro_f1", 0.0))
 
 

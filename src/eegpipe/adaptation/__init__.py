@@ -1,4 +1,5 @@
 """Domain adaptation by covariance alignment (unsupervised, leakage-free)."""
+
 from eegpipe.adaptation.alignment import (
     EuclideanAlignment,
     RiemannianRecentering,
